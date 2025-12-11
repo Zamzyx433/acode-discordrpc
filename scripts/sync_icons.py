@@ -1,35 +1,29 @@
+import base64
 import json
 import os
 import requests
 
-CLIENT_ID = os.environ["DISCORD_CLIENT_ID"]
-CLIENT_SECRET = os.environ["DISCORD_CLIENT_SECRET"]
-APP_ID = os.environ["DISCORD_APP_ID"]
+CLIENT_ID = os.environ.get("DISCORD_CLIENT_ID", "")
+CLIENT_SECRET = os.environ.get("DISCORD_CLIENT_SECRET", "")
+APP_ID = os.environ.get("DISCORD_APP_ID", "")
+
+if not CLIENT_ID:
+    raise ValueError("DISCORD_CLIENT_ID environment variable is not set")
+if not CLIENT_SECRET:
+    raise ValueError("DISCORD_CLIENT_SECRET environment variable is not set")
+if not APP_ID:
+    raise ValueError("DISCORD_APP_ID environment variable is not set")
 
 API = "https://discord.com/api/v10"
 ICON_FILE = "src/Icons.json"
 
-token_url = f"{API}/oauth2/token"
-token_data = {
-    "grant_type": "client_credentials",
-    "scope": "applications.commands.update"
-}
-
-token_resp = requests.post(
-    token_url,
-    data=token_data,
-    auth=(CLIENT_ID, CLIENT_SECRET),
-    headers={"User-Agent": "GitHub-Action-Icon-Sync"},
-    timeout=15
-)
-token_resp.raise_for_status()
-access_token = token_resp.json()["access_token"]
-
+auth_value = base64.b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode()).decode()
 headers = {
-    "Authorization": f"Bearer {access_token}",
+    "Authorization": f"Basic {auth_value}",
     "User-Agent": "GitHub-Action-Icon-Sync"
 }
 
+print(f"Fetching assets for APP_ID: {APP_ID}")
 resp = requests.get(f"{API}/oauth2/applications/{APP_ID}/assets", headers=headers, timeout=15)
 resp.raise_for_status()
 assets = resp.json()
@@ -45,6 +39,6 @@ else:
 if old_icons != new_icons:
     with open(ICON_FILE, "w", encoding="utf-8") as f:
         json.dump(dict(sorted(new_icons.items())), f, indent=2)
-    print("Icons.json updated")
+    print(f"Icons.json updated with {len(new_icons)} icons")
 else:
     print("No icon changes detected")
