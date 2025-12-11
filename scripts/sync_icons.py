@@ -1,4 +1,3 @@
-import base64
 import json
 import os
 import requests
@@ -10,10 +9,24 @@ APP_ID = os.environ["DISCORD_APP_ID"]
 API = "https://discord.com/api/v10"
 ICON_FILE = "src/Icons.json"
 
-# Auth header
-auth_value = base64.b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode()).decode()
+token_url = f"{API}/oauth2/token"
+token_data = {
+    "grant_type": "client_credentials",
+    "scope": "applications.commands.update"
+}
+
+token_resp = requests.post(
+    token_url,
+    data=token_data,
+    auth=(CLIENT_ID, CLIENT_SECRET),
+    headers={"User-Agent": "GitHub-Action-Icon-Sync"},
+    timeout=15
+)
+token_resp.raise_for_status()
+access_token = token_resp.json()["access_token"]
+
 headers = {
-    "Authorization": f"Basic {auth_value}",
+    "Authorization": f"Bearer {access_token}",
     "User-Agent": "GitHub-Action-Icon-Sync"
 }
 
@@ -21,17 +34,14 @@ resp = requests.get(f"{API}/oauth2/applications/{APP_ID}/assets", headers=header
 resp.raise_for_status()
 assets = resp.json()
 
-# Build name -> id map
 new_icons = {a["name"]: a["id"] for a in assets}
 
-# Load existing file if exists
 if os.path.exists(ICON_FILE):
     with open(ICON_FILE, "r", encoding="utf-8") as f:
         old_icons = json.load(f)
 else:
     old_icons = {}
 
-# Only write if changed
 if old_icons != new_icons:
     with open(ICON_FILE, "w", encoding="utf-8") as f:
         json.dump(dict(sorted(new_icons.items())), f, indent=2)
