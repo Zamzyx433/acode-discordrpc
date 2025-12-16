@@ -1,7 +1,10 @@
 import base64
 import json
+from dotenv import load_dotenv
 import os
 import requests
+
+load_dotenv()
 
 CLIENT_ID = os.environ.get("DISCORD_CLIENT_ID", "")
 CLIENT_SECRET = os.environ.get("DISCORD_CLIENT_SECRET", "")
