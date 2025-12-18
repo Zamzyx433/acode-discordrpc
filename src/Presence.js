@@ -5,6 +5,12 @@ const fs = acode.require('fs');
 const Url = acode.require('url');
 
 export class Presence {
+  static STATES = {
+    TERMINAL: "Using Terminal",
+    IDLE: "Idle in editor",
+    EDITING: "Editing on a file"
+  };
+
   constructor(rpc) {
     this.rpc = rpc;
     this.settings = rpc.settings;
@@ -22,9 +28,9 @@ export class Presence {
         state: this.state,
         details: this.details,
         assets: {
-          large_image: Icons["acode"],
-          large_text: "Acode Editor",
-          small_image: Icons[this.currentLanguage] || Icons["acode"],
+          large_image: this.largeImage,
+          large_text: BuildInfo.displayName,
+          small_image: this.smallImage,
           small_text: this.currentLanguage
         }
       }]
@@ -46,10 +52,10 @@ export class Presence {
 
   get state() {
     const { activeFile } = editorManager;
-    if (activeFile.type === "terminal") return "Using Terminal";
-    if (!activeFile.session || activeFile.id === "default-session") return "Idle in editor";
-    if (!this.settings.config.showFileName) return "Editing on a file";
-    return `Editing on ${activeFile.filename}`;
+    if (activeFile.type === "terminal") return Presence.STATES.TERMINAL;
+    if (!activeFile.session || activeFile.id === "default-session") return Presence.STATES.IDLE;
+    if (!this.settings.config.showFileName) return Presence.STATES.EDITING;
+    return Presence.STATES.EDITING.replace("a file", activeFile.filename);
   }
 
   get details() {
@@ -86,8 +92,25 @@ export class Presence {
   get currentLanguage() {
     const { activeFile } = editorManager;
     if (!activeFile.session) return;
-    return activeFile.session?.$mode?.$id?.split("/")?.pop() || "text";
+    return activeFile.session?.$mode?.$id?.split("/")?.pop();
   }
+
+  get largeImage() {
+    switch (this.state) {
+      case Presence.STATES.TERMINAL:
+        return Icons.terminal;
+      case Presence.STATES.IDLE:
+        return Icons.idle;
+      default:
+        if (!this.settings.config.showFileName) return Icons.editing;
+        return Icons[this.currentLanguage] || Icons.editing;
+    }
+  }
+
+  get smallImage() {
+    return Icons.acode;
+  }
+
 
   // async getRepositoryButton() {
   //   try {
