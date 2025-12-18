@@ -2,7 +2,7 @@
   "id": "x.discord.rpc",
   "name": "Discord Rich Presence",
   "main": "main.js",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "readme": "readme.md",
   "icon": "icon.png",
   "license": "MIT",
