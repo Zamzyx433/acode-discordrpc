@@ -1,0 +1,8 @@
+{
+  "editor": "vscode",
+  "vscode": {
+    "workspace": "MyProject",
+    "file": "index.js",
+    "language": "javascript"
+  }
+}
