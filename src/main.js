@@ -1,8 +1,12 @@
-import plugin from '../plugin.json';
-import { DiscordRichPresence } from './Plugin.js';
+import fs from "fs"
+import path from "path"
 
-if (window.acode) {
-  const mPlugin = new DiscordRichPresence(plugin);
-  acode.setPluginInit(plugin.id, mPlugin.init.bind(mPlugin), mPlugin.pSettings);
-  acode.setPluginUnmount(plugin.id, mPlugin.destroy.bind(mPlugin));
+const CONFIG_PATH = path.resolve(process.cwd(), "config.json")
+
+let config = { editor: "acode" }
+
+if (fs.existsSync(CONFIG_PATH)) {
+  config = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf-8"))
 }
+
+export default config
